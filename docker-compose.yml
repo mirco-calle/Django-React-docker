@@ -1,0 +1,50 @@
+ services:
+  db:
+    image: postgres:14.18
+    restart: always
+    container_name: postgresql
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      DATABASE_HOST: ${DATABASE_HOST}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  pgAdmin:
+    depends_on:
+      - db
+    container_name: pgadmin
+    image: dpage/pgadmin4:9.5.0
+    ports:
+      - "80:80"
+    environment:
+      PGADMIN_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD}
+      PGADMIN_DEFAULT_EMAIL: mirco@gmail.com
+
+  web:
+    depends_on:
+      - db
+    build: 
+      context: .
+      dockerfile: Dockerfile
+
+    # build= Usa el Dockerfile en el directorio actual para construir la imagen
+
+    container_name: django
+    command: python manage.py runserver 0.0.0.0:8000
+    # Comando que inicia el servidor de Django
+
+    volumes:
+      - .:/app
+     #Monta tu directorio local en el contenedor para reflejar cambios sin rebuild
+
+    ports:
+      - "8000:8000"
+    #Expone el puerto para acceder desde tu navegador
+
+    environment:
+    # Variables de entorno que Django usará para conectarse a PostgreSQL
+      POSTGRES_NAME: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      
